@@ -35,7 +35,7 @@ data "azurerm_resource_group" "this" {
 # Create VM-Series metrics resources
 
 module "ngfw_metrics" {
-  source = "github.com/PaloAltoNetworks/terraform-azurerm-swfw-modules//modules/ngfw_metrics"
+  source = "github.com/PaloAltoNetworks/terraform-azurerm-swfw-modules//modules/ngfw_metrics?ref=v3.5.1"
 
   count = var.ngfw_metrics != null ? 1 : 0
 
@@ -77,7 +77,7 @@ locals {
 }
 
 module "bootstrap" {
-  source = "github.com/PaloAltoNetworks/terraform-azurerm-swfw-modules//modules/bootstrap"
+  source = "github.com/PaloAltoNetworks/terraform-azurerm-swfw-modules//modules/bootstrap?ref=v3.5.1"
 
   for_each = var.bootstrap_storages
 
@@ -115,7 +115,7 @@ resource "azurerm_availability_set" "this" {
 # Deploy VM-Series firewalls
 
 module "vmseries" {
-  source = "github.com/PaloAltoNetworks/terraform-azurerm-swfw-modules//modules/vmseries"
+  source = "github.com/PaloAltoNetworks/terraform-azurerm-swfw-modules//modules/vmseries?ref=v3.5.1"
 
   for_each = var.vmseries
 
