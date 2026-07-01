@@ -11,17 +11,20 @@ tags = {
 }
 
 # NETWORK REFERENCES
-# Copy these values from the outputs of the LB-Sandwich-infra deployment.
+# Provide the Azure resource IDs of your existing subnets and LB backend pools.
+# These can come from any deployment — Terraform outputs, Azure Portal, or az CLI:
+#   Subnets:          az network vnet subnet list --resource-group <rg> --vnet-name <vnet> --query "[].id"
+#   LB backend pools: az network lb address-pool list --resource-group <rg> --lb-name <lb> --query "[].id"
 
 subnet_ids = {
-  management = "" # TODO: Fill in from LB-Sandwich-infra output: subnet_ids["transit"]["management"]
-  public     = "" # TODO: Fill in from LB-Sandwich-infra output: subnet_ids["transit"]["public"]
-  private    = "" # TODO: Fill in from LB-Sandwich-infra output: subnet_ids["transit"]["private"]
+  management = "" # TODO: Resource ID of your management subnet
+  public     = "" # TODO: Resource ID of your public (untrust) subnet
+  private    = "" # TODO: Resource ID of your private (trust) subnet
 }
 
 lb_backend_pool_ids = {
-  public  = "" # TODO: Fill in from LB-Sandwich-infra output: lb_frontend_ips["public"] backend pool ID
-  private = "" # TODO: Fill in from LB-Sandwich-infra output: lb_frontend_ips["private"] backend pool ID
+  public  = "" # TODO: Resource ID of the public (external) LB backend pool
+  private = "" # TODO: Resource ID of the private (internal) LB backend pool
 }
 
 # VM-SERIES

@@ -44,20 +44,23 @@ variable "tags" {
 }
 
 # NETWORK REFERENCES
-# These values are outputs of the LB-Sandwich-infra deployment.
+# Supply the Azure resource IDs of your existing subnets and load balancer backend pools.
+# These can come from any deployment — Terraform outputs, the Azure Portal, or az CLI:
+#   az network vnet subnet show --ids <id> --query id
+#   az network lb address-pool show --ids <id> --query id
 
 variable "subnet_ids" {
   description = <<-EOF
-  Map of subnet logical keys to Azure subnet resource IDs.
-  These are the outputs of the LB-Sandwich-infra deployment and are used to attach VM-Series
-  network interfaces to the correct subnets.
+  Map of logical subnet keys to Azure subnet resource IDs.
+  The keys are referenced by name in the `vmseries` interfaces via `subnet_key`.
+  Values can be sourced from any existing Azure deployment — not just LB-Sandwich-infra.
 
   Example:
   ```
   subnet_ids = {
-    management = "/subscriptions/.../subnets/mgmt-snet"
-    public     = "/subscriptions/.../subnets/public-snet"
-    private    = "/subscriptions/.../subnets/private-snet"
+    management = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>/subnets/mgmt-snet"
+    public     = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>/subnets/public-snet"
+    private    = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>/subnets/private-snet"
   }
   ```
   EOF
@@ -66,15 +69,15 @@ variable "subnet_ids" {
 
 variable "lb_backend_pool_ids" {
   description = <<-EOF
-  Map of load balancer logical keys to their backend pool resource IDs.
-  These are the outputs of the LB-Sandwich-infra deployment and are used to register VM-Series
-  interfaces with the correct load balancer backend pools.
+  Map of logical load balancer keys to Azure LB backend pool resource IDs.
+  The keys are referenced by name in the `vmseries` interfaces via `load_balancer_key`.
+  Values can be sourced from any existing Azure deployment — not just LB-Sandwich-infra.
 
   Example:
   ```
   lb_backend_pool_ids = {
-    public  = "/subscriptions/.../backendAddressPools/public-lb-backend"
-    private = "/subscriptions/.../backendAddressPools/private-lb-backend"
+    public  = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/loadBalancers/<lb>/backendAddressPools/<pool>"
+    private = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/loadBalancers/<lb>/backendAddressPools/<pool>"
   }
   ```
   EOF
