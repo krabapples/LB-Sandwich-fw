@@ -25,3 +25,13 @@ output "bootstrap_storage_urls" {
   value       = length(var.bootstrap_storages) > 0 ? { for k, v in module.bootstrap : k => v.file_share_urls } : null
   sensitive   = true
 }
+
+output "lb_frontend_ips" {
+  description = "Frontend IP configurations for each load balancer."
+  value       = length(var.load_balancers) > 0 ? { for k, v in module.load_balancer : k => v.frontend_ip_configs } : null
+}
+
+output "lb_backend_pool_ids" {
+  description = "Backend pool resource IDs for each load balancer."
+  value       = length(var.load_balancers) > 0 ? { for k, v in module.load_balancer : k => v.backend_pool_id } : null
+}

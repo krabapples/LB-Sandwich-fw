@@ -22,9 +22,63 @@ subnet_ids = {
   private    = "" # TODO: Resource ID of your private (trust) subnet
 }
 
-lb_backend_pool_ids = {
-  public  = "" # TODO: Resource ID of the public (external) LB backend pool
-  private = "" # TODO: Resource ID of the private (internal) LB backend pool
+# LOAD BALANCING
+
+load_balancers = {
+  "public" = {
+    name = "public-lb"
+    nsg_auto_rules_settings = {
+      nsg_name   = "example-public-nsg" # TODO: Name of the public NSG created by LB-Sandwich-infra
+      source_ips = ["1.1.1.1/32"]       # TODO: Whitelist public IP addresses that will be used to access LB
+    }
+    health_probes = {
+      http = {
+        name         = "http-probe"
+        protocol     = "Http"
+        request_path = "/unauth/php/health.php"
+      }
+    }
+    frontend_ips = {
+      "app1" = {
+        name             = "app1"
+        public_ip_name   = "public-lb-app1-pip"
+        create_public_ip = true
+        in_rules = {
+          "balanceHttp" = {
+            name             = "HTTP"
+            protocol         = "Tcp"
+            port             = 80
+            health_probe_key = "http"
+          }
+        }
+      }
+    }
+  }
+  "private" = {
+    name = "private-lb"
+    health_probes = {
+      http = {
+        name         = "http-probe"
+        protocol     = "Http"
+        request_path = "/unauth/php/health.php"
+      }
+    }
+    frontend_ips = {
+      "ha-ports" = {
+        name               = "private-vmseries"
+        subnet_key         = "private"
+        private_ip_address = "10.0.0.46"
+        in_rules = {
+          HA_PORTS = {
+            name             = "HA-ports"
+            port             = 0
+            protocol         = "All"
+            health_probe_key = "http"
+          }
+        }
+      }
+    }
+  }
 }
 
 # VM-SERIES

@@ -32,6 +32,40 @@ data "azurerm_resource_group" "this" {
   name = var.resource_group_name
 }
 
+# Create Load Balancers
+
+module "load_balancer" {
+  source = "github.com/PaloAltoNetworks/terraform-azurerm-swfw-modules//modules/loadbalancer?ref=v3.5.1"
+
+  for_each = var.load_balancers
+
+  name                = "${var.name_prefix}${each.value.name}"
+  region              = var.region
+  resource_group_name = data.azurerm_resource_group.this.name
+  zones               = each.value.zones
+  backend_name        = each.value.backend_name
+  health_probes       = each.value.health_probes
+
+  nsg_auto_rules_settings = try(
+    {
+      nsg_name                = each.value.nsg_auto_rules_settings.nsg_name
+      nsg_resource_group_name = each.value.nsg_auto_rules_settings.nsg_resource_group_name
+      source_ips              = each.value.nsg_auto_rules_settings.source_ips
+      base_priority           = each.value.nsg_auto_rules_settings.base_priority
+    },
+    null
+  )
+
+  frontend_ips = {
+    for k, v in each.value.frontend_ips : k => merge(v, {
+      public_ip_name = v.create_public_ip ? "${var.name_prefix}${v.public_ip_name}" : v.public_ip_name
+      subnet_id      = try(var.subnet_ids[v.subnet_key], null)
+    })
+  }
+
+  tags = var.tags
+}
+
 # Create VM-Series metrics resources
 
 module "ngfw_metrics" {
@@ -178,7 +212,7 @@ module "vmseries" {
       private_ip_address            = vv.private_ip_address
     } }
     attach_to_lb_backend_pool    = v.load_balancer_key != null
-    lb_backend_pool_id           = try(var.lb_backend_pool_ids[v.load_balancer_key], null)
+    lb_backend_pool_id           = try(module.load_balancer[v.load_balancer_key].backend_pool_id, null)
     attach_to_appgw_backend_pool = false
     appgw_backend_pool_id        = null
   }]

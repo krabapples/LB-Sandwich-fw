@@ -67,21 +67,69 @@ variable "subnet_ids" {
   type        = map(string)
 }
 
-variable "lb_backend_pool_ids" {
+variable "load_balancers" {
   description = <<-EOF
-  Map of logical load balancer keys to Azure LB backend pool resource IDs.
-  The keys are referenced by name in the `vmseries` interfaces via `load_balancer_key`.
-  Values can be sourced from any existing Azure deployment — not just LB-Sandwich-infra.
+  A map containing configuration for all (both private and public) Load Balancers.
 
-  Example:
-  ```
-  lb_backend_pool_ids = {
-    public  = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/loadBalancers/<lb>/backendAddressPools/<pool>"
-    private = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/loadBalancers/<lb>/backendAddressPools/<pool>"
-  }
-  ```
+  Following properties are available:
+
+  - `name`                    - (`string`, required) a name of the Load Balancer.
+  - `zones`                   - (`list`, optional, defaults to ["1", "2", "3"]) a list of zones for frontend IP configurations.
+  - `backend_name`            - (`string`, optional, defaults to "vmseries_backend") a name of the backend pool to create.
+  - `health_probes`           - (`map`, optional) health probes used by load balancing rules.
+  - `nsg_auto_rules_settings` - (`map`, optional) populates an existing NSG with Allow rules for each in_rule. Pass `nsg_name`
+                                directly (the NSG was created by LB-Sandwich-infra).
+  - `frontend_ips`            - (`map`, optional) frontend IP configurations with `in_rules` and `out_rules`.
+    - `subnet_key`            - (`string`, optional) key into `var.subnet_ids` for internal LB frontends.
   EOF
-  type        = map(string)
+  default     = {}
+  nullable    = false
+  type = map(object({
+    name         = string
+    zones        = optional(list(string), ["1", "2", "3"])
+    backend_name = optional(string, "vmseries_backend")
+    health_probes = optional(map(object({
+      name                = string
+      protocol            = string
+      port                = optional(number)
+      probe_threshold     = optional(number)
+      interval_in_seconds = optional(number)
+      request_path        = optional(string)
+    })))
+    nsg_auto_rules_settings = optional(object({
+      nsg_name                = string
+      nsg_resource_group_name = optional(string)
+      source_ips              = list(string)
+      base_priority           = optional(number)
+    }))
+    frontend_ips = optional(map(object({
+      name                          = string
+      subnet_key                    = optional(string)
+      create_public_ip              = optional(bool, false)
+      public_ip_name                = optional(string)
+      public_ip_resource_group_name = optional(string)
+      private_ip_address            = optional(string)
+      gwlb_key                      = optional(string)
+      in_rules = optional(map(object({
+        name                    = string
+        protocol                = string
+        port                    = number
+        backend_port            = optional(number)
+        health_probe_key        = optional(string)
+        floating_ip             = optional(bool)
+        session_persistence     = optional(string)
+        nsg_priority            = optional(number)
+        idle_timeout_in_minutes = optional(number)
+      })), {})
+      out_rules = optional(map(object({
+        name                     = string
+        protocol                 = string
+        allocated_outbound_ports = optional(number)
+        enable_tcp_reset         = optional(bool)
+        idle_timeout_in_minutes  = optional(number)
+      })), {})
+    })), {})
+  }))
 }
 
 # VM-SERIES
