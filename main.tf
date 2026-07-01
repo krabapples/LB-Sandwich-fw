@@ -169,9 +169,9 @@ module "vmseries" {
     name      = "${var.name_prefix}${v.name}"
     subnet_id = var.subnet_ids[v.subnet_key]
     ip_configurations = { for vk, vv in v.ip_configurations : vk => {
-      name                          = vv.name
+      name                          = coalesce(vv.name, "primary")
       create_public_ip              = vv.create_public_ip
-      public_ip_name                = vv.create_public_ip ? "${var.name_prefix}${coalesce(vv.public_ip_name, "${v.name}-${vv.name}-pip")}" : vv.public_ip_name
+      public_ip_name                = vv.create_public_ip ? "${var.name_prefix}${coalesce(vv.public_ip_name, "${v.name}-${vk}-pip")}" : vv.public_ip_name
       primary                       = vv.primary
       public_ip_resource_group_name = vv.public_ip_resource_group_name
       public_ip_id                  = null

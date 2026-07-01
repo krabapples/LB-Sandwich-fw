@@ -343,7 +343,7 @@ variable "vmseries" {
       name       = string
       subnet_key = string
       ip_configurations = map(object({
-        name                          = optional(string)
+        name                          = optional(string, "primary")
         primary                       = optional(bool, true)
         create_public_ip              = optional(bool, false)
         public_ip_name                = optional(string)
